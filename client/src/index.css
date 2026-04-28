@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  @apply m-0 min-h-screen font-header text-mission-text;
+  background:
+    radial-gradient(circle at 15% 18%, rgba(0, 212, 255, 0.1) 0%, transparent 22%),
+    radial-gradient(circle at 85% 10%, rgba(0, 255, 148, 0.09) 0%, transparent 26%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(126, 148, 184, 0.04),
+      rgba(126, 148, 184, 0.04) 1px,
+      transparent 1px,
+      transparent 42px
+    ),
+    #060b14;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.panel {
+  @apply rounded-2xl border border-mission-grid/70 bg-mission-panel/90 shadow-panel backdrop-blur;
+}
+
+.panel-title {
+  @apply font-header text-2xl uppercase tracking-[0.12em] text-mission-text;
+}
+
+.kpi-value {
+  @apply font-mono text-3xl font-semibold text-mission-accent;
+}
+
+.mono-data {
+  @apply font-mono tracking-wide;
+}
+
+.status-dot {
+  @apply h-2 w-2 rounded-full;
+}
+
+.scanline {
+  position: relative;
+}
+
+.scanline::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 100% 3px;
+  opacity: 0.15;
+}
