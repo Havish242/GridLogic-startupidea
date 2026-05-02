@@ -80,10 +80,9 @@ async def health():
         "components": components,
     }
 
-    if overall_status == "ok":
-        return payload
-
-    return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content=payload)
+    # Always return 200 so simple health checks in PowerShell don't throw,
+    # while still surfacing degraded component status in the payload.
+    return payload
 
 
 app.include_router(auth_router)

@@ -119,8 +119,24 @@ api.interceptors.response.use(
       }
     }
 
-    if (isNetworkFailure(error) || (error?.response?.status >= 500 && error?.response?.status < 600)) {
+    if (isNetworkFailure(error)) {
       notifyConnectionStatus(false);
+    } else if (error?.response && error?.response?.status >= 500 && error?.response?.status < 600) {
+      // Treat server-side errors as "reachable" when they come from the
+      // /health endpoint (the backend is responding but degraded). Only mark
+      // the backend unreachable for network failures or 5xx errors from
+      // non-health endpoints.
+      const requestUrl = requestConfig.url || '';
+      try {
+        const normalizedUrl = String(requestUrl || '').toLowerCase();
+        if (normalizedUrl.endsWith('/health') || normalizedUrl.endsWith('/health/')) {
+          notifyConnectionStatus(true);
+        } else {
+          notifyConnectionStatus(false);
+        }
+      } catch (e) {
+        notifyConnectionStatus(false);
+      }
     }
 
     const normalizedError = new Error(getErrorMessage(error));

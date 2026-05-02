@@ -1,11 +1,11 @@
 function severityStyles(level) {
-  if (level === 'critical') return 'border-mission-danger/60 bg-mission-danger/10 text-mission-danger';
-  if (level === 'high') return 'border-mission-warn/60 bg-mission-warn/10 text-mission-warn';
-  if (level === 'medium') return 'border-mission-cyan/60 bg-mission-cyan/10 text-mission-cyan';
-  return 'border-mission-accent/60 bg-mission-accent/10 text-mission-accent';
+  if (level === 'critical') return 'border-red-400/60 bg-red-400/10 text-red-300';
+  if (level === 'high') return 'border-orange-400/60 bg-orange-400/10 text-orange-300';
+  if (level === 'medium') return 'border-yellow-400/60 bg-yellow-400/10 text-yellow-300';
+  return 'border-emerald-400/60 bg-emerald-400/10 text-emerald-300';
 }
 
-export default function IncidentFeed({ incidents, onSelect }) {
+export default function IncidentFeed({ incidents, onSelect, loading = false }) {
   return (
     <div className="panel p-4 scanline">
       <div className="mb-3 flex items-center justify-between">
@@ -15,10 +15,21 @@ export default function IncidentFeed({ incidents, onSelect }) {
         </span>
       </div>
       <div className="max-h-[420px] space-y-2 overflow-auto pr-1">
-        {incidents.map((incident) => (
+        {loading && (
+          <div className="space-y-2" role="status" aria-label="Loading incidents">
+            {[1, 2, 3].map((idx) => (
+              <div key={idx} className="animate-pulse rounded-xl border border-mission-grid bg-[#091527] p-3">
+                <div className="h-4 w-2/5 rounded bg-mission-grid/80" />
+                <div className="mt-2 h-3 w-4/5 rounded bg-mission-grid/70" />
+                <div className="mt-2 h-3 w-1/2 rounded bg-mission-grid/70" />
+              </div>
+            ))}
+          </div>
+        )}
+        {!loading && incidents.map((incident) => (
           <button
             key={incident.id}
-            className="w-full rounded-xl border border-mission-grid bg-[#091527] p-3 text-left transition hover:border-mission-cyan/70 hover:bg-[#0b1b31]"
+            className="w-full rounded-xl border border-mission-grid bg-[#091527] p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-mission-cyan/70 hover:bg-[#0b1b31]"
             onClick={() => onSelect(incident)}
           >
             <div className="flex items-center justify-between">
@@ -31,7 +42,7 @@ export default function IncidentFeed({ incidents, onSelect }) {
             <p className="mt-1 text-sm text-mission-text/85">{incident.location?.address || 'Location telemetry pending'}</p>
           </button>
         ))}
-        {!incidents.length && (
+        {!loading && !incidents.length && (
           <div className="rounded-xl border border-mission-grid bg-[#091527] p-4 text-center">
             <p className="mono-data text-sm text-mission-muted">No active incidents. System monitoring all assets.</p>
           </div>

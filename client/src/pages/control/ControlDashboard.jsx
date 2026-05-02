@@ -16,6 +16,7 @@ function severityWeight(level) {
 
 export default function ControlDashboard() {
   const [tokenReady, setTokenReady] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [incidents, setIncidents] = useState([]);
   const [engineers, setEngineers] = useState([]);
   const [selectedIncident, setSelectedIncident] = useState(null);
@@ -37,6 +38,7 @@ export default function ControlDashboard() {
 
   const loadData = useCallback(async () => {
     if (!tokenReady) return;
+    setInitialLoading(true);
     try {
       const [i, e] = await Promise.all([
         getIncidents({ status: 'open' }),
@@ -46,6 +48,8 @@ export default function ControlDashboard() {
       setEngineers(e);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setInitialLoading(false);
     }
   }, [tokenReady]);
 
@@ -151,12 +155,12 @@ export default function ControlDashboard() {
   }, [incidents]);
 
   return (
-    <div className="mx-auto mt-4 grid w-[96%] max-w-[1500px] gap-4 pb-10 lg:grid-cols-12">
-      <section className="panel p-4 lg:col-span-12 scanline">
+    <div className="mt-4 grid gap-5 pb-10 lg:grid-cols-12">
+      <section className="panel p-5 lg:col-span-12 scanline">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="mono-data text-xs uppercase text-mission-cyan">Control Center Portal</p>
-            <h2 className="font-header text-4xl uppercase tracking-[0.08em] text-mission-text">Live Map Dashboard</h2>
+            <h2 className="font-header text-3xl uppercase tracking-[0.08em] text-mission-text md:text-4xl">Live Map Dashboard</h2>
           </div>
           <div className="text-right">
             <p className="mono-data text-xs uppercase text-mission-muted">UTC Sync</p>
@@ -184,10 +188,10 @@ export default function ControlDashboard() {
         </div>
       </section>
 
-      <section className="lg:col-span-8">
+      <section className="space-y-4 lg:col-span-8">
         <MapPanel incidents={incidents} engineers={engineers} activeRoute={activeRoute} />
 
-        <div className="panel mt-4 p-4">
+        <div className="panel p-4">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="panel-title text-xl">Operational Load</h3>
             <span className="mono-data text-xs uppercase text-mission-muted">pressure {metrics.queuePressure.toFixed(2)}</span>
@@ -209,8 +213,8 @@ export default function ControlDashboard() {
         </div>
       </section>
 
-      <section className="space-y-4 lg:col-span-4">
-        <IncidentFeed incidents={incidents} onSelect={handleSelectIncident} />
+      <section id="incidents" className="space-y-4 lg:col-span-4">
+        <IncidentFeed incidents={incidents} onSelect={handleSelectIncident} loading={initialLoading} />
         {selectedIncident && (
           <div className="panel p-4 scanline">
             <div className="flex items-center justify-between">
@@ -224,7 +228,7 @@ export default function ControlDashboard() {
               {matches.map((m) => (
                 <button
                   key={m.engineer_id}
-                  className="w-full rounded-xl border border-mission-grid bg-[#091527] p-3 text-left transition hover:border-mission-accent/80 hover:bg-[#0c1f36]"
+                  className="w-full rounded-xl border border-mission-grid bg-[#091527] p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-mission-accent/80 hover:bg-[#0c1f36]"
                   onClick={() => handleDispatch(m.engineer_id)}
                   disabled={isLoading(`dispatch-${m.engineer_id}`)}
                 >
@@ -260,8 +264,8 @@ export default function ControlDashboard() {
         </div>
       </section>
 
-      <section className="lg:col-span-12">
-        <EngineerDirectory engineers={engineers} />
+      <section id="engineers" className="lg:col-span-12">
+        <EngineerDirectory engineers={engineers} loading={initialLoading} />
       </section>
 
       {error && <p className="lg:col-span-12 rounded-xl border border-mission-danger/60 bg-mission-danger/10 p-3 text-sm text-mission-danger">{error}</p>}

@@ -1,4 +1,10 @@
-import { GoogleMap, Marker, Polyline, useLoadScript } from '@react-google-maps/api';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
+import { GoogleMap, InfoWindow, LoadScript, Marker, Polyline } from '@react-google-maps/api';
+
+const DEFAULT_CENTER = { lat: 13.0827, lng: 80.2707 };
+
+const MAP_CONTAINER_STYLE = { width: '100%', height: '500px' };
 
 const MAP_OPTIONS = {
   styles: [
@@ -23,8 +29,15 @@ function markerColorBySeverity(severity) {
   return 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
 }
 
+function incidentIcon(incident) {
+  if ((incident?.infra_type || '').toLowerCase() === 'dam') {
+    return 'http://maps.google.com/mapfiles/ms/icons/purple-dot.png';
+  }
+  return markerColorBySeverity(incident?.severity);
+}
+
 function toNumber(value) {
-  const parsed = Number(value);
+  const parsed = parseFloat(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
@@ -42,11 +55,12 @@ function normalizeLocation(location) {
     const b = toNumber(location.coordinates[1]);
     if (a === null || b === null) return null;
 
-    if (Math.abs(a) <= 90 && Math.abs(b) <= 180) {
-      return { lat: a, lng: b };
-    }
+    // GeoJSON arrays are usually [lng, lat].
     if (Math.abs(a) <= 180 && Math.abs(b) <= 90) {
       return { lat: b, lng: a };
+    }
+    if (Math.abs(a) <= 90 && Math.abs(b) <= 180) {
+      return { lat: a, lng: b };
     }
   }
 
@@ -63,26 +77,72 @@ function infraLabel(infraType) {
 }
 
 export default function MapPanel({ incidents, engineers, activeRoute }) {
-  const hasMapsKey = Boolean(import.meta.env.VITE_GOOGLE_MAPS_KEY);
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_KEY || '',
-  });
+  const mapRef = useRef(null);
+  const [selectedIncident, setSelectedIncident] = useState(null);
+  const [mapReady, setMapReady] = useState(false);
+  const mapsKey = import.meta.env.VITE_GOOGLE_MAPS_KEY || '';
+  const hasMapsKey = Boolean(mapsKey);
 
-  const incidentMarkers = (incidents || [])
-    .map((incident) => ({ incident, location: normalizeLocation(incident.location) }))
-    .filter((entry) => Boolean(entry.location));
+  const incidentMarkers = useMemo(
+    () => (incidents || []).flatMap((incident, index) => {
+      const location = normalizeLocation(incident.location);
+      if (!location) {
+        console.warn('Skipping incident marker due to invalid location', incident?.id, incident?.location);
+        return [];
+      }
+      return [{
+        id: incident?.id || `incident-${index}-${location.lat}-${location.lng}`,
+        incident,
+        location,
+      }];
+    }),
+    [incidents]
+  );
 
-  const engineerMarkers = (engineers || [])
-    .map((engineer) => ({ engineer, location: normalizeLocation(engineer.location) }))
-    .filter((entry) => Boolean(entry.location));
+  const engineerMarkers = useMemo(
+    () => (engineers || []).flatMap((engineer, index) => {
+      const location = normalizeLocation(engineer.location);
+      if (!location) {
+        console.warn('Skipping engineer marker due to invalid location', engineer?.id, engineer?.location);
+        return [];
+      }
+      return [{
+        id: engineer?.id || `engineer-${index}-${location.lat}-${location.lng}`,
+        engineer,
+        location,
+      }];
+    }),
+    [engineers]
+  );
 
   const routePath = (activeRoute || [])
     .map((point) => normalizeLocation(point))
     .filter((point) => Boolean(point));
 
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || !window.google) return;
+
+    const points = [...incidentMarkers.map((m) => m.location), ...engineerMarkers.map((m) => m.location)];
+    if (!points.length) return;
+
+    const bounds = new window.google.maps.LatLngBounds();
+    points.forEach((point) => bounds.extend(point));
+    mapRef.current.fitBounds(bounds);
+
+    console.log('Map markers:', {
+      incidents: incidentMarkers.length,
+      engineers: engineerMarkers.length,
+    });
+
+    if (points.length === 1) {
+      mapRef.current.setCenter(points[0]);
+      mapRef.current.setZoom(10);
+    }
+  }, [mapReady, incidentMarkers, engineerMarkers]);
+
   if (!hasMapsKey) {
     return (
-      <div className="panel h-[460px] p-4 scanline">
+      <div className="panel h-[500px] p-4 scanline">
         <h3 className="panel-title">Live Geospatial Board</h3>
         <p className="mt-2 text-sm text-mission-muted">
           Google Maps key is not configured. Set VITE_GOOGLE_MAPS_KEY in client environment to enable full map rendering.
@@ -105,14 +165,6 @@ export default function MapPanel({ incidents, engineers, activeRoute }) {
     );
   }
 
-  if (!isLoaded) {
-    return (
-      <div className="panel flex h-[460px] items-center justify-center p-4">
-        <p className="mono-data text-sm uppercase text-mission-cyan">Map uplink initializing...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="panel overflow-hidden scanline">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-mission-grid px-4 py-3">
@@ -126,47 +178,76 @@ export default function MapPanel({ incidents, engineers, activeRoute }) {
           </span>
         </div>
       </div>
-      <GoogleMap
-        mapContainerStyle={{ width: '100%', height: '460px' }}
-        center={{ lat: 22.57, lng: 78.96 }}
-        zoom={5}
-        options={MAP_OPTIONS}
+      <LoadScript
+        googleMapsApiKey={mapsKey}
+        onLoad={() => setMapReady(true)}
+        loadingElement={
+          <div className="flex h-[500px] items-center justify-center">
+            <div className="flex items-center gap-3">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-mission-cyan border-t-transparent" />
+              <p className="mono-data text-sm uppercase text-mission-cyan">Map uplink initializing...</p>
+            </div>
+          </div>
+        }
       >
-        {incidentMarkers.map(({ incident, location }) => (
-          <Marker
-            key={incident.id}
-            position={location}
-            icon={markerColorBySeverity(incident.severity)}
-            label={{
-              text: infraLabel(incident.infra_type),
-              color: '#d8e6ff',
-              fontSize: '10px',
-              fontWeight: '700',
-            }}
-            title={`${incident.infra_type || 'asset'}${incident.location?.address ? ` | ${incident.location.address}` : ''}`}
-          />
-        ))}
-        {engineerMarkers.map(({ engineer, location }) => (
-          <Marker
-            key={engineer.id}
-            position={location}
-            icon="http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
-            title={engineer.name || 'Engineer'}
-          />
-        ))}
-        {routePath.length > 1 && <Polyline path={routePath} options={{ strokeColor: '#00FF94', strokeWeight: 4 }} />}
-      </GoogleMap>
+        <GoogleMap
+          onLoad={(map) => {
+            mapRef.current = map;
+          }}
+          mapContainerStyle={MAP_CONTAINER_STYLE}
+          center={DEFAULT_CENTER}
+          zoom={5}
+          options={MAP_OPTIONS}
+        >
+          {incidentMarkers.map(({ id, incident, location }) => (
+            <Marker
+              key={id}
+              position={location}
+              icon={incidentIcon(incident)}
+              label={{
+                text: infraLabel(incident.infra_type),
+                color: '#d8e6ff',
+                fontSize: '10px',
+                fontWeight: '700',
+              }}
+              title={`${incident.infra_type || 'asset'}${incident.location?.address ? ` | ${incident.location.address}` : ''}`}
+              onClick={() => setSelectedIncident({ incident, location })}
+            />
+          ))}
+          {engineerMarkers.map(({ id, engineer, location }) => (
+            <Marker
+              key={id}
+              position={location}
+              icon="http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+              title={engineer.name || 'Engineer'}
+            />
+          ))}
+          {routePath.length > 1 && <Polyline path={routePath} options={{ strokeColor: '#00FF94', strokeWeight: 4 }} />}
+          {selectedIncident && (
+            <InfoWindow
+              position={selectedIncident.location}
+              onCloseClick={() => setSelectedIncident(null)}
+            >
+              <div className="min-w-[200px] text-[#08101b]">
+                <p className="text-xs font-semibold uppercase">{selectedIncident.incident?.infra_type || 'asset'}</p>
+                <p className="text-xs">Severity: {selectedIncident.incident?.severity || 'unknown'}</p>
+                <p className="text-xs">{selectedIncident.incident?.location?.address || 'Address unavailable'}</p>
+              </div>
+            </InfoWindow>
+          )}
+        </GoogleMap>
+      </LoadScript>
       <div className="flex flex-wrap gap-2 border-t border-mission-grid px-4 py-3">
-        <span className="mono-data rounded-full border border-mission-danger/60 bg-mission-danger/10 px-2 py-1 text-[11px] uppercase text-mission-danger">
+        <span className="mono-data rounded-full border border-red-400/60 bg-red-400/10 px-2 py-1 text-[11px] uppercase text-red-300">
           Critical
         </span>
-        <span className="mono-data rounded-full border border-mission-warn/60 bg-mission-warn/10 px-2 py-1 text-[11px] uppercase text-mission-warn">
+        <span className="mono-data rounded-full border border-orange-400/60 bg-orange-400/10 px-2 py-1 text-[11px] uppercase text-orange-300">
           High
         </span>
-        <span className="mono-data rounded-full border border-mission-cyan/60 bg-mission-cyan/10 px-2 py-1 text-[11px] uppercase text-mission-cyan">
+        <span className="mono-data rounded-full border border-yellow-400/60 bg-yellow-400/10 px-2 py-1 text-[11px] uppercase text-yellow-300">
           Medium
         </span>
-        <span className="mono-data rounded-full border border-mission-accent/60 bg-mission-accent/10 px-2 py-1 text-[11px] uppercase text-mission-accent">
+        <span className="mono-data rounded-full border border-emerald-400/60 bg-emerald-400/10 px-2 py-1 text-[11px] uppercase text-emerald-300">
           Low
         </span>
       </div>
