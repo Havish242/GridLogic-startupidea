@@ -22,18 +22,8 @@ const MAP_OPTIONS = {
   clickableIcons: false,
 };
 
-function markerColorBySeverity(severity) {
-  if (severity === 'critical') return 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
-  if (severity === 'high') return 'http://maps.google.com/mapfiles/ms/icons/orange-dot.png';
-  if (severity === 'medium') return 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
-  return 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
-}
-
 function incidentIcon(incident) {
-  if ((incident?.infra_type || '').toLowerCase() === 'dam') {
-    return 'http://maps.google.com/mapfiles/ms/icons/purple-dot.png';
-  }
-  return markerColorBySeverity(incident?.severity);
+  return 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
 }
 
 function toNumber(value) {
@@ -170,10 +160,10 @@ export default function MapPanel({ incidents, engineers, activeRoute }) {
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-mission-grid px-4 py-3">
         <h3 className="panel-title">Live Asset Map</h3>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="mono-data rounded-full border border-mission-accent/40 bg-mission-accent/10 px-2 py-1 text-[11px] uppercase text-mission-accent">
+          <span className="mono-data rounded-sm border border-mission-danger/40 bg-[#EF4444]/10 px-2 py-1 text-[11px] font-bold uppercase text-mission-danger">
             Incidents: {incidentMarkers.length}
           </span>
-          <span className="mono-data rounded-full border border-mission-cyan/40 bg-mission-cyan/10 px-2 py-1 text-[11px] uppercase text-mission-cyan">
+          <span className="mono-data rounded-sm border border-mission-success/40 bg-mission-success/10 px-2 py-1 text-[11px] font-bold uppercase text-mission-success">
             Engineers: {engineerMarkers.length}
           </span>
         </div>
@@ -218,11 +208,11 @@ export default function MapPanel({ incidents, engineers, activeRoute }) {
             <Marker
               key={id}
               position={location}
-              icon="http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+              icon="http://maps.google.com/mapfiles/ms/icons/green-dot.png"
               title={engineer.name || 'Engineer'}
             />
           ))}
-          {routePath.length > 1 && <Polyline path={routePath} options={{ strokeColor: '#00FF94', strokeWeight: 4 }} />}
+          {routePath.length > 1 && <Polyline path={routePath} options={{ strokeColor: '#F59E0B', strokeWeight: 5 }} />}
           {selectedIncident && (
             <InfoWindow
               position={selectedIncident.location}
@@ -238,16 +228,16 @@ export default function MapPanel({ incidents, engineers, activeRoute }) {
         </GoogleMap>
       </LoadScript>
       <div className="flex flex-wrap gap-2 border-t border-mission-grid px-4 py-3">
-        <span className="mono-data rounded-full border border-red-400/60 bg-red-400/10 px-2 py-1 text-[11px] uppercase text-red-300">
+        <span className="mono-data rounded-sm border border-red-400/60 bg-red-400/10 px-2 py-1 text-[11px] uppercase text-red-300 font-bold">
           Critical
         </span>
-        <span className="mono-data rounded-full border border-orange-400/60 bg-orange-400/10 px-2 py-1 text-[11px] uppercase text-orange-300">
+        <span className="mono-data rounded-sm border border-orange-400/60 bg-orange-400/10 px-2 py-1 text-[11px] uppercase text-orange-300 font-bold">
           High
         </span>
-        <span className="mono-data rounded-full border border-yellow-400/60 bg-yellow-400/10 px-2 py-1 text-[11px] uppercase text-yellow-300">
+        <span className="mono-data rounded-sm border border-yellow-400/60 bg-yellow-400/10 px-2 py-1 text-[11px] uppercase text-yellow-300 font-bold">
           Medium
         </span>
-        <span className="mono-data rounded-full border border-emerald-400/60 bg-emerald-400/10 px-2 py-1 text-[11px] uppercase text-emerald-300">
+        <span className="mono-data rounded-sm border border-emerald-400/60 bg-emerald-400/10 px-2 py-1 text-[11px] uppercase text-emerald-300 font-bold">
           Low
         </span>
       </div>

@@ -4,25 +4,38 @@ export default {
     extend: {
       colors: {
         mission: {
-          bg: '#060B14',
-          panel: '#0C1322',
-          grid: '#18263B',
-          accent: '#00FF94',
-          cyan: '#00D4FF',
-          danger: '#FF3B55',
-          text: '#D8E6FF',
-          muted: '#7E94B8',
-          warn: '#FFC857',
+          bg: '#0D0F14',
+          panel: '#1A1E2A',
+          grid: '#2A3040',
+          accent: '#F59E0B',
+          cyan: '#38BDF8', // Kept for legacy compatibility if used, but we'll use accent for primary
+          danger: '#EF4444',
+          success: '#22C55E',
+          text: '#E2E8F0',
+          muted: '#64748B',
+          warn: '#F59E0B', // Same as accent
         },
       },
       boxShadow: {
-        panel: '0 24px 45px rgba(3, 8, 19, 0.55)',
-        glow: '0 0 0 1px rgba(0, 212, 255, 0.12), 0 0 18px rgba(0, 255, 148, 0.2)',
+        panel: '0 8px 32px rgba(0, 0, 0, 0.5)',
+        glow: '0 0 0 1px rgba(245, 158, 11, 0.1), 0 0 12px rgba(245, 158, 11, 0.2)',
+        danger: '0 0 0 1px rgba(239, 68, 68, 0.2), 0 0 15px rgba(239, 68, 68, 0.3)',
       },
       fontFamily: {
-        header: ['Barlow Condensed', 'sans-serif'],
+        header: ['Rajdhani', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
+        sans: ['Inter', 'sans-serif'],
       },
+      animation: {
+        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'pulse-danger': 'pulseDanger 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      },
+      keyframes: {
+        pulseDanger: {
+          '0%, 100%': { opacity: '1', boxShadow: '0 0 0 0 rgba(239, 68, 68, 0.7)' },
+          '50%': { opacity: '.8', boxShadow: '0 0 0 10px rgba(239, 68, 68, 0)' },
+        }
+      }
     },
   },
   plugins: [],

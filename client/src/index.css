@@ -1,60 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Rajdhani:wght@500;600&family=Share+Tech+Mono&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-* {
-  box-sizing: border-box;
+:root {
+  --bg-void: #05070C;
+  --bg-base: #080D14;
+  --bg-surface: #0C1220;
+  --bg-raised: #101828;
+  --amber: #F59E0B;
+  --amber-glow: rgba(245, 158, 11, 0.15);
+  --red: #EF4444;
+  --red-glow: rgba(239, 68, 68, 0.15);
+  --green: #22C55E;
+  --cyan: #06B6D4;
+  --text-primary: #E8EDF5;
+  --text-secondary: #7A8899;
+  --text-muted: #3D4F62;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --bg-hover: #162035;
 }
 
-body {
-  @apply m-0 min-h-screen font-header text-mission-text;
-  background:
-    radial-gradient(circle at 15% 18%, rgba(0, 212, 255, 0.1) 0%, transparent 22%),
-    radial-gradient(circle at 85% 10%, rgba(0, 255, 148, 0.09) 0%, transparent 26%),
-    repeating-linear-gradient(
-      0deg,
-      rgba(126, 148, 184, 0.04),
-      rgba(126, 148, 184, 0.04) 1px,
-      transparent 1px,
-      transparent 42px
-    ),
-    #060b14;
+.scrollbar-custom::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: var(--bg-raised);
+  border-radius: 2px;
+}
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
-#root {
-  min-height: 100vh;
+@layer base {
+  body {
+    @apply m-0 min-h-screen bg-[var(--bg-void)] text-[var(--text-primary)] font-['Rajdhani'];
+    background-image: 
+      repeating-linear-gradient(
+        0deg,
+        rgba(255, 255, 255, 0.03) 0px,
+        rgba(255, 255, 255, 0.03) 1px,
+        transparent 1px,
+        transparent 2px
+      ),
+      linear-gradient(to right, rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+    background-size: 100% 2px, 40px 40px, 40px 40px;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-['Barlow_Condensed'] uppercase tracking-wider;
+  }
+
+  .font-mono-data {
+    @apply font-['Share+Tech+Mono'];
+  }
+
+  .label-caps {
+    @apply uppercase tracking-wider font-medium;
+  }
 }
 
-.panel {
-  @apply rounded-2xl border border-mission-grid/70 bg-mission-panel/90 shadow-panel backdrop-blur;
+@layer components {
+  .card-panel {
+    @apply bg-[var(--bg-surface)] border border-[var(--border)] rounded-sm overflow-hidden;
+  }
+
+  .btn-amber {
+    @apply bg-[var(--amber)] text-[var(--bg-void)] font-['Barlow_Condensed'] font-bold uppercase tracking-widest px-4 py-2 transition-all hover:bg-[#ffb020] active:scale-[0.98];
+  }
+
+  .badge {
+    @apply px-2 py-0.5 text-[10px] font-bold uppercase tracking-tighter rounded-sm;
+  }
 }
 
-.panel-title {
-  @apply font-header text-2xl uppercase tracking-[0.12em] text-mission-text;
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-void);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-raised);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
-.kpi-value {
-  @apply font-mono text-3xl font-semibold text-mission-accent;
+/* Animations */
+@keyframes pulse-glow-red {
+  0%, 100% { border-color: var(--red); box-shadow: 0 0 5px var(--red-glow); }
+  50% { border-color: #ff6b6b; box-shadow: 0 0 15px var(--red-glow); }
 }
 
-.mono-data {
-  @apply font-mono tracking-wide;
+.animate-pulse-red {
+  animation: pulse-glow-red 2s infinite;
 }
 
-.status-dot {
-  @apply h-2 w-2 rounded-full;
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
 }
 
-.scanline {
-  position: relative;
-}
-
-.scanline::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  background-size: 100% 3px;
-  opacity: 0.15;
+.animate-pulse-dot {
+  animation: pulse-dot 1.5s infinite;
 }

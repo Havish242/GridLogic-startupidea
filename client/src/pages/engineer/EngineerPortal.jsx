@@ -330,34 +330,36 @@ export default function EngineerPortal() {
       <section className="panel p-4 scanline">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="mono-data text-xs uppercase text-mission-cyan">Engineer Portal</p>
+            <p className="mono-data text-xs uppercase text-mission-muted">Engineer Portal</p>
             <h2 className="font-header text-4xl uppercase tracking-[0.08em] text-mission-text">Field Command</h2>
-            <p className="mt-1 text-sm text-mission-muted">Mobile response workflow with live dispatch telemetry.</p>
+            <p className="mt-1 text-sm text-mission-muted">Mobile response workflow</p>
           </div>
-          <span className={`mono-data rounded-full border px-2 py-1 text-xs uppercase ${statusTone(status)}`}>{status}</span>
+          <span className={`mono-data rounded-sm border px-3 py-1 text-sm font-bold uppercase ${statusTone(status)}`}>{status}</span>
         </div>
-        <p className="mono-data mt-3 rounded-xl border border-mission-grid bg-[#091527] px-3 py-2 text-xs uppercase text-mission-accent">
-          {notice}
-        </p>
+        {notice && (
+          <p className="mono-data mt-3 rounded-md border border-mission-grid bg-mission-panel px-3 py-2 text-xs uppercase text-mission-accent">
+            {notice}
+          </p>
+        )}
       </section>
 
       <section className="panel p-4">
-        <h3 className="panel-title text-xl">Status Channel</h3>
-        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <h3 className="panel-title text-xl mb-3">Availability Status</h3>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {['available', 'on_job', 'offline'].map((value) => (
             <button
               key={value}
-              className={`mono-data rounded-xl border px-3 py-2 text-sm uppercase transition ${
+              className={`mono-data rounded-md border p-4 text-center font-bold text-sm uppercase transition flex justify-center items-center ${
                 status === value
-                  ? 'border-mission-accent bg-mission-accent/15 text-mission-accent'
-                  : 'border-mission-grid bg-[#091527] text-mission-muted hover:border-mission-cyan/60 hover:text-mission-cyan'
+                  ? 'border-mission-success bg-mission-success/20 text-mission-success shadow-glow'
+                  : 'border-mission-grid bg-mission-panel text-mission-muted hover:border-mission-accent hover:text-mission-accent'
               }`}
               onClick={() => handleStatusChange(value)}
               disabled={isLoading(`status-${value}`)}
             >
               <span className="inline-flex items-center gap-2">
                 {value}
-                {isLoading(`status-${value}`) && <span className="h-3 w-3 animate-spin rounded-full border border-mission-accent border-t-transparent" />}
+                {isLoading(`status-${value}`) && <span className="h-4 w-4 animate-spin rounded-full border-2 border-mission-accent border-t-transparent" />}
               </span>
             </button>
           ))}
@@ -365,78 +367,78 @@ export default function EngineerPortal() {
       </section>
 
       <section className="panel p-4">
-        <h3 className="panel-title text-xl">Live Job Notification</h3>
+        <h3 className="panel-title text-xl mb-3">Live Job Notification</h3>
         {activeDispatch ? (
-          <div className="mt-3 rounded-xl border border-mission-grid bg-[#091527] p-3">
+          <div className="rounded-md border-l-4 border-l-mission-danger border-y border-r border-mission-grid bg-mission-panel p-4">
             <div className="flex items-center justify-between gap-2">
-              <p className="font-header text-2xl uppercase tracking-[0.05em] text-mission-text">
+              <p className="font-header text-3xl uppercase tracking-wide text-mission-text font-bold">
                 {activeIncident?.fault_type || 'Repair Dispatch'}
               </p>
-              <span className={`mono-data rounded-full border px-2 py-1 text-xs uppercase ${dispatchTone(activeDispatch.status)}`}>
+              <span className={`mono-data rounded-sm border px-3 py-1 font-bold text-sm uppercase ${dispatchTone(activeDispatch.status)}`}>
                 {activeDispatch.status}
               </span>
             </div>
-            <p className="mono-data mt-2 text-xs uppercase text-mission-muted">
+            <p className="mono-data mt-2 text-sm uppercase text-mission-muted">
               ETA {activeDispatch.estimated_eta || 0}m | Dispatch #{String(activeDispatch.id || '').slice(-6)}
             </p>
-            <p className="mt-1 text-sm text-mission-text/90">{activeIncident?.location?.address || 'Location telemetry unavailable'}</p>
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <button
-                className="mono-data rounded-xl border border-mission-accent/70 bg-mission-accent/15 px-3 py-2 text-sm uppercase text-mission-accent"
-                onClick={handleAcceptDispatch}
-                disabled={isLoading('accept-dispatch') || activeAccepted}
-              >
-                <span className="inline-flex items-center gap-2">
-                  {activeAccepted ? 'Accepted' : 'Accept Assignment'}
-                  {isLoading('accept-dispatch') && <span className="h-3 w-3 animate-spin rounded-full border border-mission-accent border-t-transparent" />}
-                </span>
-              </button>
-              <button
-                className="mono-data rounded-xl border border-mission-danger/70 bg-mission-danger/15 px-3 py-2 text-sm uppercase text-mission-danger"
-                onClick={handleDeclineDispatch}
-                disabled={isLoading('decline-dispatch')}
-              >
-                <span className="inline-flex items-center gap-2">
-                  Decline Assignment
-                  {isLoading('decline-dispatch') && <span className="h-3 w-3 animate-spin rounded-full border border-mission-danger border-t-transparent" />}
-                </span>
-              </button>
-              <button
-                className="mono-data rounded-xl border border-mission-cyan/70 bg-mission-cyan/15 px-3 py-2 text-sm uppercase text-mission-cyan"
-                onClick={handleArrived}
-                disabled={isLoading('mark-arrived') || activeDispatch.status === 'arrived' || activeDispatch.status === 'completed'}
-              >
-                <span className="inline-flex items-center gap-2">
-                  Mark Arrived
-                  {isLoading('mark-arrived') && <span className="h-3 w-3 animate-spin rounded-full border border-mission-cyan border-t-transparent" />}
-                </span>
-              </button>
-              <button
-                className="mono-data rounded-xl border border-mission-accent/70 bg-mission-accent/15 px-3 py-2 text-sm uppercase text-mission-accent"
-                onClick={() => handleStatusChange('on_job')}
-                disabled={isLoading('status-on_job')}
-              >
-                <span className="inline-flex items-center gap-2">
-                  Set En Route
-                  {isLoading('status-on_job') && <span className="h-3 w-3 animate-spin rounded-full border border-mission-accent border-t-transparent" />}
-                </span>
-              </button>
+            <p className="mt-2 text-lg text-mission-text/90 font-sans">{activeIncident?.location?.address || 'Location telemetry unavailable'}</p>
+            <div className="mt-5 flex flex-col gap-3">
+              {!activeAccepted && (
+                <button
+                  className="w-full rounded-md bg-mission-accent py-4 text-center font-header text-2xl font-bold uppercase tracking-wider text-mission-bg transition hover:bg-[#D97706] hover:shadow-glow disabled:opacity-50 flex justify-center items-center gap-2"
+                  onClick={handleAcceptDispatch}
+                  disabled={isLoading('accept-dispatch')}
+                >
+                  ACCEPT JOB
+                  {isLoading('accept-dispatch') && <span className="h-5 w-5 animate-spin rounded-full border-2 border-mission-bg border-t-transparent" />}
+                </button>
+              )}
+              {activeAccepted && activeDispatch.status !== 'arrived' && activeDispatch.status !== 'completed' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    className="w-full rounded-md bg-mission-panel border border-mission-accent py-4 text-center font-header text-xl font-bold uppercase tracking-wider text-mission-accent transition hover:bg-mission-accent/20 flex justify-center items-center gap-2"
+                    onClick={() => handleStatusChange('on_job')}
+                    disabled={isLoading('status-on_job')}
+                  >
+                    EN ROUTE
+                    {isLoading('status-on_job') && <span className="h-5 w-5 animate-spin rounded-full border-2 border-mission-accent border-t-transparent" />}
+                  </button>
+                  <button
+                    className="w-full rounded-md bg-mission-success py-4 text-center font-header text-xl font-bold uppercase tracking-wider text-mission-bg transition hover:bg-[#15803D] flex justify-center items-center gap-2"
+                    onClick={handleArrived}
+                    disabled={isLoading('mark-arrived')}
+                  >
+                    ON SITE
+                    {isLoading('mark-arrived') && <span className="h-5 w-5 animate-spin rounded-full border-2 border-mission-bg border-t-transparent" />}
+                  </button>
+                </div>
+              )}
+              {!activeAccepted && (
+                <button
+                  className="w-full rounded-md border border-mission-danger bg-mission-danger/10 py-3 text-center font-header text-lg font-bold uppercase tracking-wider text-mission-danger transition hover:bg-mission-danger/20 flex justify-center items-center gap-2"
+                  onClick={handleDeclineDispatch}
+                  disabled={isLoading('decline-dispatch')}
+                >
+                  DECLINE
+                  {isLoading('decline-dispatch') && <span className="h-5 w-5 animate-spin rounded-full border-2 border-mission-danger border-t-transparent" />}
+                </button>
+              )}
             </div>
           </div>
         ) : (
-          <div className="mt-3 rounded-xl border border-mission-grid bg-[#091527] p-3">
-            <p className="mono-data text-xs uppercase text-mission-muted">No active assignments. Standing by for dispatch update.</p>
+          <div className="rounded-md border border-mission-grid bg-mission-panel p-4 text-center">
+            <p className="mono-data text-sm uppercase text-mission-muted font-bold tracking-wide">No active assignments. Standing by.</p>
           </div>
         )}
       </section>
 
       <section className="panel p-4">
-        <h3 className="panel-title text-xl">Turn-by-Turn Assist</h3>
+        <h3 className="panel-title text-xl mb-3">Turn-by-Turn Assist</h3>
         {hasMapsKey ? (
           isMapLoaded ? (
-            <div className="mt-3 overflow-hidden rounded-xl border border-mission-grid">
+            <div className="overflow-hidden rounded-md border border-mission-grid">
               <GoogleMap
-                mapContainerStyle={{ width: '100%', height: '240px' }}
+                mapContainerStyle={{ width: '100%', height: '300px' }}
                 center={activeRoute[0] || { lat: 22.57, lng: 78.96 }}
                 zoom={activeRoute.length > 1 ? 9 : 5}
                 options={NAV_MAP_OPTIONS}
@@ -449,7 +451,7 @@ export default function EngineerPortal() {
                     icon="http://maps.google.com/mapfiles/ms/icons/red-dot.png"
                   />
                 )}
-                {activeRoute.length > 1 && <Polyline path={activeRoute} options={{ strokeColor: '#00D4FF', strokeWeight: 4 }} />}
+                {activeRoute.length > 1 && <Polyline path={activeRoute} options={{ strokeColor: '#F59E0B', strokeWeight: 5 }} />}
               </GoogleMap>
             </div>
           ) : (
@@ -458,14 +460,16 @@ export default function EngineerPortal() {
         ) : (
           <p className="mono-data mt-3 text-xs uppercase text-mission-muted">Set VITE_GOOGLE_MAPS_KEY to enable navigation map.</p>
         )}
-        <div className="mt-3 space-y-2">
+        <div className="mt-4 space-y-3">
           {routeGuide.map((step, idx) => (
-            <div key={step.id} className="rounded-xl border border-mission-grid bg-[#091527] p-3">
-              <p className="mono-data text-xs uppercase text-mission-cyan">Step {idx + 1}</p>
-              <p className="mt-1 text-sm text-mission-text">{step.label}</p>
-              <p className="mono-data mt-1 text-xs uppercase text-mission-muted">
-                {step.distance.toFixed(1)} km | {Number(step.point.lat).toFixed(4)}, {Number(step.point.lng).toFixed(4)}
-              </p>
+            <div key={step.id} className="rounded-md border border-mission-grid bg-mission-panel p-4 flex gap-3 items-center">
+              <div className="mono-data bg-mission-grid text-mission-text h-8 w-8 rounded-sm flex items-center justify-center font-bold">{idx + 1}</div>
+              <div>
+                <p className="font-header text-lg uppercase tracking-wide text-mission-text">{step.label}</p>
+                <p className="mono-data text-xs uppercase text-mission-muted">
+                  {step.distance.toFixed(1)} km | {Number(step.point.lat).toFixed(4)}, {Number(step.point.lng).toFixed(4)}
+                </p>
+              </div>
             </div>
           ))}
           {!routeGuide.length && <p className="mono-data text-xs uppercase text-mission-muted">Route guidance will appear when a dispatch route is assigned.</p>}

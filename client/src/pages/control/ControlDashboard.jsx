@@ -169,21 +169,22 @@ export default function ControlDashboard() {
           </div>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border border-mission-grid bg-[#091527] p-3">
+          <div className="rounded-md border border-mission-grid bg-mission-panel p-4">
             <p className="mono-data text-xs uppercase text-mission-muted">Open Incidents</p>
             <p className="kpi-value">{metrics.open}</p>
           </div>
-          <div className="rounded-xl border border-mission-danger/40 bg-mission-danger/10 p-3">
+          <div className="rounded-md border border-mission-danger/40 bg-[#EF4444]/10 p-4 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-mission-danger animate-pulse-danger" />
             <p className="mono-data text-xs uppercase text-mission-danger">Critical Alerts</p>
-            <p className="font-mono text-3xl font-semibold text-mission-danger">{metrics.critical}</p>
+            <p className="font-mono text-4xl font-bold text-mission-danger">{metrics.critical}</p>
           </div>
-          <div className="rounded-xl border border-mission-cyan/40 bg-mission-cyan/10 p-3">
-            <p className="mono-data text-xs uppercase text-mission-cyan">Available Engineers</p>
-            <p className="font-mono text-3xl font-semibold text-mission-cyan">{metrics.available}</p>
+          <div className="rounded-md border border-mission-grid bg-mission-panel p-4">
+            <p className="mono-data text-xs uppercase text-mission-text">Available Engineers</p>
+            <p className="font-mono text-4xl font-bold text-mission-success">{metrics.available}</p>
           </div>
-          <div className="rounded-xl border border-mission-accent/40 bg-mission-accent/10 p-3">
+          <div className="rounded-md border border-mission-grid bg-mission-panel p-4">
             <p className="mono-data text-xs uppercase text-mission-accent">Predicted MTTR</p>
-            <p className="font-mono text-3xl font-semibold text-mission-accent">{metrics.predictedMttr}m</p>
+            <p className={`font-mono text-4xl font-bold ${metrics.predictedMttr < 10 ? 'text-mission-danger animate-pulse-fast' : 'text-mission-accent'}`}>{metrics.predictedMttr}:00</p>
           </div>
         </div>
       </section>
@@ -198,12 +199,12 @@ export default function ControlDashboard() {
           </div>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {infraMix.map((item) => (
-              <div key={item.key} className="rounded-xl border border-mission-grid bg-[#091527] p-3">
+              <div key={item.key} className="rounded-md border border-mission-grid bg-mission-panel p-3">
                 <p className="mono-data text-xs uppercase text-mission-muted">{item.key}</p>
                 <p className="font-mono text-2xl text-mission-text">{item.count}</p>
-                <div className="mt-2 h-1.5 rounded-full bg-mission-grid">
+                <div className="mt-2 h-1.5 rounded-sm bg-mission-bg">
                   <div
-                    className="h-1.5 rounded-full bg-mission-cyan"
+                    className="h-1.5 rounded-sm bg-mission-accent"
                     style={{ width: `${Math.min(100, item.count * 15)}%` }}
                   />
                 </div>
@@ -226,18 +227,22 @@ export default function ControlDashboard() {
             <p className="mt-2 text-sm text-mission-text/90">{selectedIncident.fault_type} at {selectedIncident.location?.address}</p>
             <div className="mt-3 space-y-2 max-h-[260px] overflow-auto pr-1">
               {matches.map((m) => (
-                <button
-                  key={m.engineer_id}
-                  className="w-full rounded-xl border border-mission-grid bg-[#091527] p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-mission-accent/80 hover:bg-[#0c1f36]"
-                  onClick={() => handleDispatch(m.engineer_id)}
-                  disabled={isLoading(`dispatch-${m.engineer_id}`)}
-                >
-                  <p className="mono-data flex items-center gap-2 text-sm uppercase text-mission-text">
-                    Engineer {m.engineer_id.slice(-6)}
-                    {isLoading(`dispatch-${m.engineer_id}`) && <span className="h-3 w-3 animate-spin rounded-full border border-mission-accent border-t-transparent" />}
-                  </p>
-                  <p className="mono-data mt-1 text-xs uppercase text-mission-muted">score {m.match_score} | ETA {m.eta_minutes}m</p>
-                </button>
+                <div key={m.engineer_id} className="rounded-md border border-mission-grid bg-mission-panel p-4 mb-2 flex flex-col gap-3">
+                  <div>
+                    <p className="mono-data text-sm uppercase text-mission-text font-bold">
+                      Engineer {m.engineer_id.slice(-6)}
+                    </p>
+                    <p className="mono-data text-xs uppercase text-mission-muted">Match Score: {m.match_score} | ETA: {m.eta_minutes}m</p>
+                  </div>
+                  <button
+                    className="w-full rounded-md bg-mission-accent py-3 px-4 text-center font-header text-xl font-bold uppercase tracking-wider text-mission-bg transition hover:bg-[#D97706] hover:shadow-glow disabled:opacity-50 flex justify-center items-center gap-2"
+                    onClick={() => handleDispatch(m.engineer_id)}
+                    disabled={isLoading(`dispatch-${m.engineer_id}`)}
+                  >
+                    DISPATCH NOW
+                    {isLoading(`dispatch-${m.engineer_id}`) && <span className="h-4 w-4 animate-spin rounded-full border-2 border-mission-bg border-t-transparent" />}
+                  </button>
+                </div>
               ))}
               {!matches.length && (
                 <p className="mono-data text-xs uppercase text-mission-muted">
@@ -250,13 +255,13 @@ export default function ControlDashboard() {
         <div className="panel p-4">
           <h3 className="panel-title text-xl">MTTR Analytics</h3>
           <div className="mt-3 space-y-2">
-            <div className="rounded-xl border border-mission-grid bg-[#091527] p-3">
+            <div className="rounded-md border border-mission-grid bg-mission-panel p-3 flex justify-between items-center">
               <p className="mono-data text-xs uppercase text-mission-muted">Dispatch Readiness</p>
-              <p className="font-mono text-2xl text-mission-cyan">{metrics.available > 0 ? 'NOMINAL' : 'DEGRADED'}</p>
+              <p className="font-mono text-xl font-bold text-mission-success">{metrics.available > 0 ? 'NOMINAL' : 'DEGRADED'}</p>
             </div>
-            <div className="rounded-xl border border-mission-grid bg-[#091527] p-3">
+            <div className="rounded-md border border-mission-grid bg-mission-panel p-3 flex justify-between items-center">
               <p className="mono-data text-xs uppercase text-mission-muted">Current SLA Risk</p>
-              <p className={`font-mono text-2xl ${metrics.critical > 2 ? 'text-mission-danger' : 'text-mission-accent'}`}>
+              <p className={`font-mono text-xl font-bold ${metrics.critical > 2 ? 'text-mission-danger animate-pulse-danger' : 'text-mission-accent'}`}>
                 {metrics.critical > 2 ? 'HIGH' : 'CONTROLLED'}
               </p>
             </div>
